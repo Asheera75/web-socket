@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        body{
+            background:url(/img/Took\ A\ Masters\ In\ Machine\ Learning\ And\ I\ Was\ \(VERY\)\ Unprepared.jpeg);
+            
+        }
+        main{
+            text-align: center;
+            color: aliceblue;
+            padding: 30px;
+            font-size: 25px;
+            font-family: 'Courier New', Courier, monospace;
+            
+        }
+        #name{
+            width: 250px;
+            height: 40px;
+            border-radius: 10px;
+        }
+        #room{
+            width: 250px;
+            height: 40px;
+            border-radius: 10px;
+        }
+        button{
+            width: 100px;
+            height: 40px;
+            border-radius: 10px;
+            font-size: 15px;
+            font-family: 'Courier New', Courier, monospace;
+        }
+        #message{
+            width: 250px;
+            height: 40px;
+            border-radius: 10px;
+        }
+        
+    </style>
+</head>
+<body>
+    <main>
+    <h1>messaging</h1>
+    <form >
+    <input type="text" name="name" id="name" placeholder="Enter your name"><br><br>
+    <input type="text" name="room" id="room" placeholder="Enter room number"><br><br>
+    <button type="button" onclick="JoinRoom()">Join</button>
+    <button onclick="LeaveRoom()">Leave</button><br>
+    <ul id="joinlist">
+    </ul>
+    <input type="text" name="message" id="message" placeholder="Enter your message" ><br><br>
+    <button type="button" onclick="sendMessage()">Send</button>
+    <ul id="messagelist">
+    </ul>
+    </form> 
+</main> 
+    <script>
+        let socket;
+        const JoinRoom=()=>{
+            var joinlist=document.getElementById('joinlist');
+            var name=document.getElementById('name');
+            var room=document.getElementById('room');
+            var messagelist=document.getElementById('messagelist');
+
+            if (name.value.length > 0 && room.value.length > 0) {
+
+             socket=new WebSocket('ws://192.168.29.30:3400');
+
+             socket.onopen=()=>{
+             socket.send(JSON.stringify({type:'join',name:name.value,room:room.value}))
+        }
+        socket.onmessage=(e)=>{
+            let data = JSON.parse(e.data);
+
+            if(data.type=='notify')
+            {
+                let li=document.createElement('li')
+                li.textContent=data.message
+                joinlist.appendChild(li);
+                console.log(data.message)
+            }
+            else if(data.type=='message')
+            {
+                let li=document.createElement('li')
+                li.textContent=data.username+':'+data.message;
+                messagelist.appendChild(li);
+                console.log(data.message)
+            }
+        }
+    }
+            else{
+                alert("enter name and room number");
+            }
+            
+        }
+       const sendMessage=()=>{
+          let message=document.getElementById('message');
+          socket.send(JSON.stringify({type:'message',message:message.value}))
+       }
+       const LeaveRoom=()=>{
+        if(socket && socket.readyState==WebSocket.OPEN){
+        socket.send(JSON.stringify({type:'leave'}))
+        socket.close()
+        window.location.reload()
+        }
+
+       }
+        
+    </script>
+</body>
+</html>
